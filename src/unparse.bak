@@ -1,0 +1,156 @@
+#lang eopl
+;Autores: Adriana Milena Noscue Dagua 2477336, Sebastian Cucalon Astorquiza 2477344
+;Santiago Torres Rojas 2380301, Nicolle Camila Hoyos Puin 2380608
+
+(provide (all-defined-out))
+
+(require "sintaxis.rkt")
+
+;; Helper para unir listas de strings con un separador
+(define string-join
+  (lambda (lst sep)
+    (cond
+      [(null? lst) ""]
+      [(null? (cdr lst)) (car lst)]
+      [else (string-append (car lst) sep (string-join (cdr lst) sep))])))
+
+;; Unparse principal para programas
+(define unparse-programa
+  (lambda (pgm)
+    (cases programa pgm
+      (un-programa (decls exp)
+        (if (null? decls)
+            (unparse-expresion exp)
+            (string-append (string-join (map unparse-decl-registro decls) "\n")
+                           "\n"
+                           (unparse-expresion exp)))))))
+
+;; Unparse de declaraciones de registro
+(define unparse-decl-registro
+  (lambda (decl)
+    (cases decl-registro decl
+      (una-decl-registro (id ids tipos)
+        (let ([campos (map (lambda (i t) (string-append (symbol->string i) ": " (unparse-tipo t))) ids tipos)])
+          (string-append "record " (symbol->string id) " { " (string-join campos ", ") " }"))))))
+
+;; Unparse de tipos
+(define unparse-tipo
+  (lambda (t)
+    (cases tipo t
+      (int-type () "int")
+      (float-type () "float")
+      (bool-type () "bool")
+      (string-type () "string")
+      (char-type () "char")
+      (unit-type () "unit")
+      (ref-type (inner-type) (string-append "ref(" (unparse-tipo inner-type) ")"))
+      (proc-type (arg-types ret-type)
+        (string-append "(" (string-join (map unparse-tipo arg-types) ", ") " -> " (unparse-tipo ret-type) ")"))
+      (record-type (id) (symbol->string id)))))
+
+;; Unparse de primitivas
+(define unparse-primitiva
+  (lambda (p)
+    (cases primitiva p
+      (add-prim () "+")
+      (sub-prim () "-")
+      (mult-prim () "*")
+      (div-prim () "/")
+      (mod-prim () "%")
+      (gt-prim () ">")
+      (lt-prim () "<")
+      (geq-prim () ">=")
+      (leq-prim () "<=")
+      (eq-prim () "==")
+      (diff-prim () "!=")
+      (and-prim () "and")
+      (or-prim () "or")
+      (not-prim () "not")
+      (concat-prim () "concat")
+      (length-prim () "length")
+      (to-string-prim () "to-string")
+      (to-number-prim () "to-number")
+      (print-prim () "print"))))
+
+;; Unparse de expresiones
+(define unparse-expresion
+  (lambda (exp)
+    (cases expresion exp
+      (num-exp (num) (number->string num))
+      (float-exp (num) (number->string num))
+      (string-exp (str)
+        (if (and (>= (string-length str) 2)
+                 (char=? (string-ref str 0) #\")
+                 (char=? (string-ref str (- (string-length str) 1)) #\"))
+            str
+            (string-append "\"" str "\"")))
+      (char-exp (char-sym)
+        (let ([s (symbol->string char-sym)])
+          (if (and (>= (string-length s) 2)
+                   (char=? (string-ref s 0) #\')
+                   (char=? (string-ref s (- (string-length s) 1)) #\'))
+              s
+              (string-append "'" s "'"))))
+      (true-exp () "true")
+      (false-exp () "false")
+      (unit-exp () "unit")
+      (var-exp (id) (symbol->string id))
+
+      (let-exp (ids exps body)
+        (let ([bindings (map (lambda (i e) (string-append (symbol->string i) " = " (unparse-expresion e))) ids exps)])
+          (string-append "let " (string-join bindings ", ") " in " (unparse-expresion body) " end")))
+
+      (ref-exp (e) (string-append "ref(" (unparse-expresion e) ")"))
+      (deref-exp (e) (string-append "deref(" (unparse-expresion e) ")"))
+      (set-exp (e1 e2) (string-append "set " (unparse-expresion e1) " := " (unparse-expresion e2)))
+
+      (begin-exp (exp1 exps)
+        (let ([all-exps (cons exp1 exps)])
+          (string-append "begin " (string-join (map unparse-expresion all-exps) "; ") " end")))
+
+      (if-exp (test-exp then-exp elif-tests elif-thens else-exp)
+        (let ([elif-parts (map (lambda (t e) (string-append " elif " (unparse-expresion t) " then " (unparse-expresion e))) elif-tests elif-thens)])
+          (string-append "if " (unparse-expresion test-exp) " then " (unparse-expresion then-exp)
+                         (apply string-append elif-parts)
+                         " else " (unparse-expresion else-exp) " end")))
+
+      (while-exp (cond-exp body-exp)
+        (string-append "while " (unparse-expresion cond-exp) " do " (unparse-expresion body-exp) " end"))
+
+      (prim-exp (prim exps)
+        (string-append (unparse-primitiva prim) "(" (string-join (map unparse-expresion exps) ", ") ")"))
+
+      (proc-exp (ids tipos body)
+        (let ([args (map (lambda (i t) (string-append (symbol->string i) ": " (unparse-tipo t))) ids tipos)])
+          (string-append "proc (" (string-join args ", ") ") " (unparse-expresion body) " end")))
+
+      (apply-exp (rator rands)
+        (string-append "apply " (unparse-expresion rator) "(" (string-join (map unparse-expresion rands) ", ") ")"))
+
+      (letrec-exp (ret-types ids arg-id-lists arg-type-lists bodies body)
+        (let ([funcs (map (lambda (rt id args types b)
+                            (let ([typed-args (map (lambda (a t) (string-append (symbol->string a) ": " (unparse-tipo t))) args types)])
+                              (string-append (unparse-tipo rt) " " (symbol->string id) "(" (string-join typed-args ", ") ") = " (unparse-expresion b))))
+                          ret-types ids arg-id-lists arg-type-lists bodies)])
+          (string-append "letrec " (string-join funcs " ") " in " (unparse-expresion body) " end")))
+
+      (atomic-exp (body m handler)
+        (string-append "atomic " (unparse-expresion body) " onfail (" (symbol->string m) ") " (unparse-expresion handler) " end"))
+
+      (abort-exp (msg-exp)
+        (string-append "abort(" (unparse-expresion msg-exp) ")"))
+
+      (new-record-exp (rec-id field-ids field-exps)
+        (let ([fields (map (lambda (f e) (string-append (symbol->string f) " = " (unparse-expresion e))) field-ids field-exps)])
+          (string-append "new " (symbol->string rec-id) " { " (string-join fields ", ") " }")))
+
+      (field-exp (rec-exp field-id)
+        (string-append "field(" (unparse-expresion rec-exp) ", " (symbol->string field-id) ")")))))
+
+;; Función unparse completa
+(define unparse
+  (lambda (ast)
+    (cond
+      [(programa? ast) (unparse-programa ast)]
+      [(expresion? ast) (unparse-expresion ast)]
+      [else (eopl:error 'unparse "Entrada no válida: ~s" ast)])))
