@@ -1,113 +1,43 @@
 #lang eopl
-;Autores: Nombre1 Codigo1, Nombre2 Codigo2, ...
+; Autores: Adriana Milena Noscue Dagua 2477336, Sebastian Cucalon Astorquiza 2477344
+; Santiago Torres Rojas 2380301, Nicolle Camila Hoyos Puin 2380608
 
 #|
   Interpretador de TxLang-UV.
   Proyecto final del curso Fundamentos de Interpretación y Compilación de
   Lenguajes de Programación, Universidad del Valle.
 
-  El archivo va en nueve secciones, en el orden en que se construye un
-  interpretador. La primera entrega llena las secciones 1 a 6 y la 8; la
-  segunda agrega al almacén el registro que permite revertir, los registros
-  del lenguaje y el chequeador de tipos de la sección 7.
-
-  Lo que hay ahora es el andamiaje mínimo para que las baterías corran: una
-  gramática con un solo literal, un value-of de una cláusula y la interfaz
-  que usan pruebas-txlang.rkt y ejemplos-anexo.rkt. Todo lo demás lo pone el
-  grupo, siguiendo la gramática y la semántica del enunciado.
+  Este archivo funciona como la fachada principal (sección 4.1 del enunciado)
+  reuniendo los módulos de la carpeta src/ y exportando la interfaz que
+  requieren pruebas-txlang.rkt y ejemplos-anexo.rkt.
 |#
 
-;;; ==========================================================
-;;; 1. Especificación léxica
-;;; ==========================================================
-;; Los dos tipos de comentario, los literales de cada clase y los
-;; identificadores. El comentario de bloque no admite | adentro.
-
-(define especificacion-lexica
-  '((espacio (whitespace) skip)
-    (numero (digit (arbno digit)) number)
-    (identificador (letter (arbno (or letter digit "-" "_" "?"))) symbol)))
+;; Importamos los módulos construidos en la carpeta src/
+(require "src/sintaxis.rkt"
+         "src/unparse.rkt"
+         "src/ambiente.rkt"
+         "src/valores.rkt"
+         "src/primitivas.rkt"
+         "src/interprete.rkt")
 
 ;;; ==========================================================
-;;; 2. Especificación gramatical
+;;; 6. Valores expresados (Formateador de salida)
 ;;; ==========================================================
-;; Un datatype por no terminal: programa, declaración de registro, tipo,
-;; expresión y primitiva. Los nombres de las variantes los escoge el grupo.
-
-(define especificacion-gramatical
-  '((programa (expresion) un-programa)
-    (expresion (numero) lit-exp)))
-
-(sllgen:make-define-datatypes especificacion-lexica especificacion-gramatical)
-
-(define scan&parse
-  (sllgen:make-string-parser especificacion-lexica especificacion-gramatical))
-
-;; Muestra los define-datatype que SLLGEN generó a partir de la gramática.
-(define mostrar-datatypes
-  (lambda ()
-    (sllgen:list-define-datatypes especificacion-lexica especificacion-gramatical)))
-
-;;; ==========================================================
-;;; 3. Unparse: del árbol de sintaxis abstracta al texto
-;;; ==========================================================
-
-(define unparse
-  (lambda (pgm)
-    (cases programa pgm
-      (un-programa (cuerpo) (unparse-expresion cuerpo)))))
-
-(define unparse-expresion
-  (lambda (exp)
-    (cases expresion exp
-      (lit-exp (n) (number->string n)))))
-
-;;; ==========================================================
-;;; 4. TAD ambiente
-;;; ==========================================================
-;; Liga identificadores a valores. Su interfaz va aparte de la del almacén.
-
-;;; ==========================================================
-;;; 5. TAD almacén
-;;; ==========================================================
-;; Celdas que se reservan con ref, se leen con deref y se escriben con set.
-;; En la primera entrega las escrituras son definitivas; en la segunda el
-;; almacén lleva el registro que permite revertir un bloque atomic. Conviene
-;; diseñar la interfaz desde ahora pensando en eso.
-
-;;; ==========================================================
-;;; 6. Valores expresados
-;;; ==========================================================
-;; Un define-datatype con los valores del lenguaje y valor->texto, que es
-;; lo que imprime correr.
 
 (define valor->texto
   (lambda (v)
-    (cond ((number? v) (number->string v))
-          (else (eopl:error 'valor->texto "no sé escribir el valor ~s" v)))))
+    (valor->texto-prim v)))
 
 ;;; ==========================================================
 ;;; 7. Chequeador de tipos (segunda entrega)
 ;;; ==========================================================
-;; Recibe el programa y lo devuelve si está bien tipado; si no, aborta con
-;; eopl:error antes de que se evalúe. Mientras no exista, deja pasar todo.
 
 (define chequear-programa
   (lambda (pgm) pgm))
 
-;; Tipo del programa, escrito como texto: "int", "ref(bool)", "(int -> int)".
 (define tipo-del-programa
   (lambda (texto)
-    (eopl:error 'tipo-del-programa "el chequeador de tipos llega en la segunda entrega")))
-
-;;; ==========================================================
-;;; 8. Interpretador
-;;; ==========================================================
-
-(define value-of
-  (lambda (exp amb)
-    (cases expresion exp
-      (lit-exp (n) n))))
+    (eopl:error 'tipo-del-programa "El chequeador de tipos llega en la segunda entrega")))
 
 ;;; ==========================================================
 ;;; 9. Interfaz
@@ -119,10 +49,18 @@
       (begin
         (chequear-programa pgm)
         (cases programa pgm
-          (un-programa (cuerpo) (value-of cuerpo 'ambiente-vacio)))))))
+          (un-programa (decls cuerpo) 
+            (value-of cuerpo (ambiente-vacio))))))))
 
 ;; Lo que usan las baterías: un texto de TxLang-UV y el valor como texto.
 (define correr
   (lambda (texto) (valor->texto (interpretar texto))))
 
-(provide (all-defined-out))
+;; POR ESTO:
+(provide (all-defined-out)
+         (all-from-out "src/sintaxis.rkt")
+         (all-from-out "src/unparse.rkt")
+         (all-from-out "src/ambiente.rkt")
+         (all-from-out "src/valores.rkt")
+         (all-from-out "src/primitivas.rkt")
+         (all-from-out "src/interprete.rkt"))
