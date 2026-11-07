@@ -1,0 +1,113 @@
+#lang eopl
+;Autores: Adriana Milena Noscue Dagua 2477336, Sebastian Cucalon Astorquiza 2477344
+;Santiago Torres Rojas 2380301, Nicolle Camila Hoyos Puin 2380608
+
+(require "sintaxis.rkt" "valores.rkt")
+(provide (all-defined-out))
+
+;; apply-primitiva: primitiva x (listof valor) -> valor
+(define apply-primitiva
+  (lambda (prim args)
+    (cases primitiva prim
+      ;; Aritméticas
+      (add-prim ()
+        (let ((a (car args)) (b (cadr args)))
+          (if (and (number? a) (number? b))
+              (+ a b)
+              (eopl:error 'apply-primitiva "Suma exige operandos numéricos: ~s, ~s" a b))))
+      
+      (sub-prim ()
+        (let ((a (car args)) (b (cadr args)))
+          (if (and (number? a) (number? b))
+              (- a b)
+              (eopl:error 'apply-primitiva "Resta exige operandos numéricos: ~s, ~s" a b))))
+      
+      (mult-prim ()
+        (let ((a (car args)) (b (cadr args)))
+          (if (and (number? a) (number? b))
+              (* a b)
+              (eopl:error 'apply-primitiva "Multiplicación exige operandos numéricos: ~s, ~s" a b))))
+      
+      (div-prim ()
+        (let ((a (car args)) (b (cadr args)))
+          (cond
+            ((not (and (number? a) (number? b)))
+             (eopl:error 'apply-primitiva "División exige operandos numéricos: ~s, ~s" a b))
+            ((zero? b)
+             (eopl:error 'apply-primitiva "División por cero"))
+            ((and (integer? a) (integer? b))
+             (quotient a b)) ; División entera si ambos son int (sección 2.5)
+            (else (/ a b)))))
+      
+      (mod-prim ()
+        (let ((a (car args)) (b (cadr args)))
+          (if (and (integer? a) (integer? b))
+              (remainder a b)
+              (eopl:error 'apply-primitiva "Módulo % solo acepta enteros: ~s, ~s" a b))))
+
+      ;; Relacionales
+      (gt-prim () (> (car args) (cadr args)))
+      (lt-prim () (< (car args) (cadr args)))
+      (geq-prim () (>= (car args) (cadr args)))
+      (leq-prim () (<= (car args) (cadr args)))
+      (eq-prim () (equal? (car args) (cadr args)))
+      (diff-prim () (not (equal? (car args) (cadr args))))
+
+      ;; Booleanas
+      (and-prim ()
+        (let ((a (car args)) (b (cadr args)))
+          (if (and (boolean? a) (boolean? b))
+              (and a b)
+              (eopl:error 'apply-primitiva "and exige booleanos: ~s, ~s" a b))))
+      
+      (or-prim ()
+        (let ((a (car args)) (b (cadr args)))
+          (if (and (boolean? a) (boolean? b))
+              (or a b)
+              (eopl:error 'apply-primitiva "or exige booleanos: ~s, ~s" a b))))
+      
+      (not-prim ()
+        (let ((a (car args)))
+          (if (boolean? a)
+              (not a)
+              (eopl:error 'apply-primitiva "not exige booleano: ~s" a))))
+
+      ;; Cadenas y conversión
+      (concat-prim ()
+        (let ((a (car args)) (b (cadr args)))
+          (if (and (string? a) (string? b))
+              (string-append a b)
+              (eopl:error 'apply-primitiva "concat exige cadenas: ~s, ~s" a b))))
+      
+      (length-prim ()
+        (let ((a (car args)))
+          (if (string? a)
+              (string-length a)
+              (eopl:error 'apply-primitiva "length exige una cadena: ~s" a))))
+      
+      (to-string-prim ()
+        (valor->texto-prim (car args)))
+      
+      (to-number-prim ()
+        (let ((a (car args)))
+          (if (string? a)
+              (or (string->number a)
+                  (eopl:error 'apply-primitiva "Cadena no convertible a número: ~s" a))
+              (eopl:error 'apply-primitiva "to-number exige cadena: ~s" a))))
+
+      ;; Efecto secundario
+      (print-prim ()
+        (begin
+          (eopl:printf "~a~%" (valor->texto-prim (car args)))
+          valor-unit)))))
+
+;; Auxiliar para print y to-string
+(define valor->texto-prim
+  (lambda (v)
+    (cond
+      ((number? v) (number->string v))
+      ((string? v) v) ; Devuelve la cadena limpia sin comillas extra
+      ((boolean? v) (if v "true" "false"))
+      ((symbol? v) (symbol->string v))
+      ((unitval? v) "unit")
+      (else (eopl:error 'valor->texto-prim "No se puede convertir el valor ~s a texto" v)))))
