@@ -5,6 +5,29 @@
 (require "sintaxis.rkt" "valores.rkt")
 (provide (all-defined-out))
 
+#|TAD ambiente: liga identificadores a valores.
+
+   Representación (privada): define-datatype ambiente con las variantes
+   ambiente-vacio, ambiente-extendido y ambiente-recursivo.
+   El intérprete debe usar solo la interfaz, no las variantes con cases.
+
+   Interfaz:
+   (ambiente-vacio) : () -> ambiente
+     Crea el ambiente sin ligaduras.
+
+   extender-ambiente : (listof symbol) x (listof valor) x ambiente -> ambiente
+     Liga cada id a su valor sobre env. Error si las listas tienen
+     distinta longitud.
+
+   extender-ambiente-recursivo : (listof symbol) x (listof (listof symbol))
+                                 x (listof expresion) x ambiente -> ambiente
+     Liga cada nombre a una cerradura cuyo ambiente es el propio ambiente
+     extendido (recursión simple y mutua).
+
+   apply-env : ambiente x symbol -> valor
+     Valor ligado al id en el ambiente más interno.
+     Error con eopl:error si no está ligado.|#
+
 (define-datatype ambiente ambiente?
   (ambiente-vacio)
   (ambiente-extendido
