@@ -1,6 +1,7 @@
 #lang eopl
 ;Autores: Nombre1 Codigo1, Nombre2 Codigo2, ...
 
+<<<<<<< Updated upstream
 #|
   Interpretador de TxLang-UV.
   Proyecto final del curso Fundamentos de Interpretación y Compilación de
@@ -126,3 +127,22 @@
   (lambda (texto) (valor->texto (interpretar texto))))
 
 (provide (all-defined-out))
+=======
+(require "src/sintaxis.rkt"
+         "src/unparse.rkt"
+         "src/ambiente.rkt"
+         "src/almacen.rkt"
+         "src/valores.rkt"
+         "src/primitivas.rkt"
+         "src/interprete.rkt"
+         "src/interfaz.rkt")
+
+(provide (all-from-out "src/sintaxis.rkt")
+         (all-from-out "src/unparse.rkt")
+         (all-from-out "src/ambiente.rkt")
+         (all-from-out "src/almacen.rkt")
+         (all-from-out "src/valores.rkt")
+         (all-from-out "src/primitivas.rkt")
+         (all-from-out "src/interprete.rkt")
+         (all-from-out "src/interfaz.rkt"))
+>>>>>>> Stashed changes
