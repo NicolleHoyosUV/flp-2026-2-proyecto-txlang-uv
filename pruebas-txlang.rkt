@@ -75,6 +75,25 @@
 
 (prueba "literal entero" "42" "42")
 (ida-y-vuelta "unparse de un literal" "42")
+(prueba "literal flotante" "3.14" "3.14")
+(prueba "literal cadena" "\"hola\"" "hola")
+(prueba "literal booleano" "true" "true")
+(prueba "let con múltiples variables" "let a = 10, b = 20 in +(a, b) end" "30")
+(prueba "secuencia begin" "begin 1; 2; 3 end" "3")
+(prueba "if rama true" "if true then 42 else 0 end" "42")
+(prueba "if con elif" "if false then 1 elif true then 2 else 3 end" "2")
+(prueba "primitiva resta y multiplicación" "*( -(10, 4), 2)" "12")
+(prueba "primitiva módulo" "%(10, 3)" "1")
+(prueba "primitivas relacionales" ">(5, 3)" "true")
+(prueba "primitivas booleanas" "and(true, not(false))" "true")
+(prueba "concatenación de cadenas" "concat(\"hola \", \"mundo\")" "hola mundo")
+(prueba "longitud de cadena" "length(\"racket\")" "6")
+(prueba "conversión to-string" "to-string(100)" "100")
+(prueba-rechazo "if con prueba no booleana" "if 1 then 2 else 3 end")
+
+(eopl:printf "~%==========================================~%")
+(eopl:printf "  pasadas ~s, fallidas ~s~%" pasadas fallidas)
+(eopl:printf "==========================================~%")
 
 ;; Agregue aquí las pruebas de la primera entrega: literales de cada clase,
 ;; let, ref/deref/set, begin, if con elif, while, cada primitiva, proc y

@@ -1,6 +1,4 @@
 #lang eopl
-<<<<<<< Updated upstream
-=======
 ;Autores: Adriana Milena Noscue Dagua 2477336, Sebastian Cucalon Astorquiza 2477344
 ;Santiago Torres Rojas 2380301, Nicolle Camila Hoyos Puin 2380608
 
@@ -87,4 +85,3 @@
               (if val-test
                   (value-of (car thens) env)
                   (eval-elifs (cdr tests) (cdr thens) else-exp env)))))))
->>>>>>> Stashed changes
