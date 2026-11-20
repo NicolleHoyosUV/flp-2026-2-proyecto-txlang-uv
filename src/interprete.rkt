@@ -85,11 +85,3 @@
               (if val-test
                   (value-of (car thens) env)
                   (eval-elifs (cdr tests) (cdr thens) else-exp env)))))))
-
-;; Función de entrada para ejecutar la 1ra entrega
-(define interpretar
-  (lambda (texto)
-    (let ((pgm (scan&parse texto)))
-      (cases programa pgm
-        (un-programa (decls cuerpo)
-          (value-of cuerpo (ambiente-vacio)))))))
