@@ -1,5 +1,6 @@
 #lang eopl
-;Autores: Nombre1 Codigo1, Nombre2 Codigo2, ...
+;Autores: Adriana Milena Noscue Dagua 2477336, Sebastian Cucalon Astorquiza 2477344
+;Santiago Torres Rojas 2380301, Nicolle Camila Hoyos Puin 2380608
 
 #|
   Batería de pruebas del interpretador de TxLang-UV.
@@ -90,6 +91,73 @@
 (prueba "longitud de cadena" "length(\"racket\")" "6")
 (prueba "conversión to-string" "to-string(100)" "100")
 (prueba-rechazo "if con prueba no booleana" "if 1 then 2 else 3 end")
+
+;; --- Pruebas extra Entrega 1: cobertura completa ---
+
+;; Literales restantes (char y unit) y comentarios
+(prueba "literal caracter" "'a'" "'a'")
+(prueba "literal unit" "unit" "unit")
+(prueba "comentarios de linea y bloque"
+  "// comentario de linea
+   #| comentario de bloque |#
+   +(10, 5)"
+  "15")
+
+;; Alcance de let (las ligaduras no se ven entre si)
+(prueba "let alcance independiente"
+  "let x = 10 in let x = 20, y = +(x, 5) in y end end"
+  "15")
+
+;; Primitivas faltantes (division entera, flotante, to-number, print) y errores
+(prueba "division entera y flotante"
+  "+(/(7, 2), to-number(\"2\"))"
+  "5")
+(prueba "primitiva print devuelve unit"
+  "print(\"probando salida\")"
+  "unit")
+(prueba-rechazo "division por cero" "/(10, 0)")
+
+;; Memoria mutable (ref, deref, set) y casos de error
+(prueba "celdas ref, deref y set"
+  "let c = ref(10) in begin set c := +(deref(c), 5); deref(c) end end"
+  "15")
+(prueba-rechazo "deref sobre valor no referencia" "deref(42)")
+(prueba-rechazo "set sobre valor no referencia" "set 10 := 20")
+
+;; Ciclo while
+(prueba "ciclo while con contador"
+  "let i = ref(0), suma = ref(0) in
+     begin
+       while <(deref(i), 5) do
+         begin
+           set suma := +(deref(suma), deref(i));
+           set i := +(deref(i), 1)
+         end
+       end;
+       deref(suma)
+     end
+   end"
+  "10")
+
+;; Procedimientos y clausuras (alcance lexico)
+(prueba "procedimiento con alcance lexico"
+  "let x = 10 in
+     let f = proc (y: int) +(x, y) end in
+       let x = 99 in apply f (5) end
+     end
+   end"
+  "15")
+
+;; Recursión simple y mutua (letrec)
+(prueba "letrec recursion mutua par e impar"
+  "letrec bool es_par (n: int) = if ==(n, 0) then true else apply es_impar (-(n, 1)) end
+          bool es_impar (n: int) = if ==(n, 0) then false else apply es_par (-(n, 1)) end
+   in apply es_par (6) end"
+  "true")
+
+;; Ida y vuelta de unparse sobre construcciones complejas
+(ida-y-vuelta "unparse de proc y let"
+  "let f = proc (x: int, y: bool) if y then x else 0 end end in apply f (10, true) end")
 
 (eopl:printf "~%==========================================~%")
 (eopl:printf "  pasadas ~s, fallidas ~s~%" pasadas fallidas)
