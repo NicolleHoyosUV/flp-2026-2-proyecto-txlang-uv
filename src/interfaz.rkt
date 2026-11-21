@@ -26,6 +26,7 @@
   (lambda (texto)
     (let ((pgm (scan&parse texto)))
       (begin
+        (inicializar-almacen!)
         (chequear-programa pgm)
         (cases programa pgm
           (un-programa (decls cuerpo)
