@@ -5,7 +5,8 @@
 (require "sintaxis.rkt" 
          "valores.rkt" 
          "ambiente.rkt" 
-         "primitivas.rkt")
+         "primitivas.rkt"
+         "almacen.rkt")
 
 (provide (all-defined-out))
 
@@ -70,9 +71,51 @@
         (let ((args (map (lambda (e) (value-of e env)) exps)))
           (apply-primitiva prim args)))
 
-      ;; PENDIENTE: Tu compañero integrará aquí ref, deref, set, proc, apply y letrec
+    ;; 8. Referencias y memoria mutable (ref, deref, set)
+      (ref-exp (e)
+        (nueva-celda (value-of e env)))
+
+      (deref-exp (e)
+        (leer-celda (value-of e env)))
+
+      (set-exp (e1 e2)
+        (let ((ref (value-of e1 env))
+              (val (value-of e2 env)))
+          (escribir-celda! ref val)
+          valor-unit))
+
+    ;; 9. Procedimientos y aplicación (proc, apply)
+      (proc-exp (ids tipos body)
+        (cerradura ids body env))
+
+      (apply-exp (rator rands)
+        (let ((proc (value-of rator env))
+              (args (map (lambda (e) (value-of e env)) rands)))
+          (apply-procedure proc args)))
+
+      ;; 10. Recursión mutua (letrec)
+      (letrec-exp (ret-types proc-names arg-idss arg-typess proc-bodies letrec-body)
+        (value-of letrec-body
+                  (extender-ambiente-recursivo proc-names arg-idss proc-bodies env)))
+
+      ;; Pendiente para entrega 2 (transacciones y registros)
       (else
-       (eopl:error 'value-of "Construcción no implementada en la 1ra entrega: ~s" exp)))))
+       (eopl:error 'value-of "Construcción no implementada aún: ~s" exp)))))
+
+  
+;; Función auxiliar para aplicar clausuras
+(define apply-procedure
+  (lambda (proc args)
+    (cases procval proc
+      (cerradura (ids body saved-env)
+        (if (= (length ids) (length args))
+            (value-of body (extender-ambiente ids args saved-env))
+            (eopl:error 'apply-procedure
+                        "Número incorrecto de argumentos: esperaba ~s, recibió ~s"
+                        (length ids) (length args))))
+      (else
+       (eopl:error 'apply-procedure "Se esperaba un procedimiento, se obtuvo: ~s" proc)))))
+
 
 ;; Función auxiliar para evaluar ramas elif en orden
 (define eval-elifs
