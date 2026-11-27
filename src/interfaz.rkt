@@ -1,6 +1,4 @@
 #lang eopl
-<<<<<<< Updated upstream
-=======
 ;Autores: Adriana Milena Noscue Dagua 2477336, Sebastian Cucalon Astorquiza 2477344
 ;Santiago Torres Rojas 2380301, Nicolle Camila Hoyos Puin 2380608
 
@@ -37,4 +35,4 @@
 
 (define correr
   (lambda (texto) (valor->texto (interpretar texto))))
->>>>>>> Stashed changes
+

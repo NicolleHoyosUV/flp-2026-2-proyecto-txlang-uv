@@ -1,6 +1,4 @@
 #lang eopl
-<<<<<<< Updated upstream
-=======
 ;Autores: Adriana Milena Noscue Dagua 2477336, Sebastian Cucalon Astorquiza 2477344
 ;Santiago Torres Rojas 2380301, Nicolle Camila Hoyos Puin 2380608
 
@@ -212,4 +210,3 @@
       (un-programa (decls body)
         (registrar-declaraciones! decls)
         (value-of body (ambiente-vacio))))))
->>>>>>> Stashed changes
