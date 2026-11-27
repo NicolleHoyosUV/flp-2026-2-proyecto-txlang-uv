@@ -98,6 +98,25 @@
         (value-of letrec-body
                   (extender-ambiente-recursivo proc-names arg-idss proc-bodies env)))
 
+      ;; 11. Registros: construcción (new) y acceso a campos (field)
+      (new-record-exp (nombre-reg ids-campos exps-campos)
+        (let ((decl (assq nombre-reg tabla-registros)))
+          (if (not decl)
+              (eopl:error 'new "El registro '~s' no ha sido declarado" nombre-reg)
+              (let ((campos-esperados (cdr decl)))
+                (validar-campos-instancia! nombre-reg campos-esperados ids-campos)
+                (let ((vals (map (lambda (e) (value-of e env)) exps-campos)))
+                  (un-registro nombre-reg (map cons ids-campos vals)))))))
+
+      (field-exp (exp-reg nombre-campo)
+        (let ((val-reg (value-of exp-reg env)))
+          (extraer-campo-registro val-reg nombre-campo)))
+      
+      ;; Pendiente para entrega 2 (transacciones y registros)
+      (else
+       (eopl:error 'value-of "Construcción no implementada aún: ~s" exp))
+      )))
+
       ;; Pendiente para entrega 2 (transacciones y registros)
       (else
        (eopl:error 'value-of "Construcción no implementada aún: ~s" exp)))))
@@ -128,3 +147,70 @@
               (if val-test
                   (value-of (car thens) env)
                   (eval-elifs (cdr tests) (cdr thens) else-exp env)))))))
+                  
+;; Función auxiliar para verificar que no haya campos repetidos
+(define validar-campos-duplicados!
+  (lambda (nombre-reg ids contexto)
+    (let loop ((resto ids))
+      (if (not (null? resto))
+          (if (memq (car resto) (cdr resto))
+              (eopl:error contexto "El campo '~s' está duplicado en el registro '~s'"
+                          (car resto) nombre-reg)
+              (loop (cdr resto)))
+          #t))))
+
+;; Función auxiliar para validar que new traiga exactamente los campos declarados
+(define validar-campos-instancia!
+  (lambda (nombre-reg campos-esperados ids-dados)
+    (validar-campos-duplicados! nombre-reg ids-dados 'new)
+    ;; Verificar que no falte ningún campo declarado
+    (for-each
+     (lambda (esperado)
+       (if (not (memq esperado ids-dados))
+           (eopl:error 'new "Falta el campo '~s' al construir el registro '~s'"
+                       esperado nombre-reg)
+           #t))
+     campos-esperados)
+    ;; Verificar que no sobre ningún campo no declarado
+    (for-each
+     (lambda (dado)
+       (if (not (memq dado campos-esperados))
+           (eopl:error 'new "El campo '~s' no existe en la declaración del registro '~s'"
+                       dado nombre-reg)
+           #t))
+     ids-dados)))
+
+;; ==========================================================
+;; Gestión de declaraciones de registros (record)
+;; ==========================================================
+;; Guarda pares (nombre-registro . (campo1 campo2 ...)) del programa actual
+(define tabla-registros '())
+
+;; registrar-declaraciones!: (list-of decl-registro) -> void
+;; Propósito: procesa las declaraciones record al inicio del programa,
+;; verifica que no haya registros ni campos duplicados en la declaración
+;; y los guarda en tabla-registros.
+(define registrar-declaraciones!
+  (lambda (decls)
+    (set! tabla-registros '())
+    (for-each
+     (lambda (decl)
+       (cases decl-registro decl
+         (una-decl-registro (nombre-reg ids-campos tipos-campos)
+           (if (assq nombre-reg tabla-registros)
+               (eopl:error 'record "El registro '~s' ya fue declarado previamente" nombre-reg)
+               (begin
+                 (validar-campos-duplicados! nombre-reg ids-campos 'record)
+                 (set! tabla-registros
+                       (cons (cons nombre-reg ids-campos) tabla-registros)))))))
+     decls)))
+
+;; eval-program: programa -> valor
+;; Propósito: registra los tipos de registros declarados y evalúa la expresión principal.
+;; (Si eval-program está en interfaz.rkt, llama a (registrar-declaraciones! decls) allá antes de value-of)
+(define eval-program
+  (lambda (pgm)
+    (cases programa pgm
+      (un-programa (decls body)
+        (registrar-declaraciones! decls)
+        (value-of body (ambiente-vacio))))))
