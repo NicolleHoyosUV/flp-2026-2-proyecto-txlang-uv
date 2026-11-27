@@ -25,6 +25,7 @@
 
 ; valor-unit: -> unitval
 ; Propósito: la única instancia de unit que usa el intérprete.
+
 (define valor-unit (el-unit))
 
 ; regval: valor de registro (instancia creada con new)
@@ -52,3 +53,4 @@
         (eopl:error 'field
                     "Se esperaba un registro en field, se recibió: ~s"
                     val))))
+

@@ -77,8 +77,8 @@
     (cases expresion exp
       (num-exp (num) (number->string num))
       (float-exp (num) (number->string num))
-      (string-exp (str) (string-append "\"" str "\""))
-      (char-exp (char-sym) (string-append "'" (symbol->string char-sym) "'"))
+      (string-exp (str) str)
+      (char-exp (char-sym) (symbol->string char-sym))
       (true-exp () "true")
       (false-exp () "false")
       (unit-exp () "unit")
@@ -109,7 +109,7 @@
         (string-append (unparse-primitiva prim) "(" (string-join (map unparse-expresion exps) ", ") ")"))
 
       (proc-exp (ids tipos body)
-        (let ([args (map (lambda (i t) (string-append (symbol->string i) " : " (unparse-tipo t))) ids tipos)])
+        (let ([args (map (lambda (i t) (string-append (symbol->string i) ": " (unparse-tipo t))) ids tipos)])
           (string-append "proc (" (string-join args ", ") ") " (unparse-expresion body) " end")))
 
       (apply-exp (rator rands)
@@ -117,7 +117,7 @@
 
       (letrec-exp (ret-types ids arg-id-lists arg-type-lists bodies body)
         (let ([funcs (map (lambda (rt id args types b)
-                            (let ([typed-args (map (lambda (a t) (string-append (symbol->string a) " : " (unparse-tipo t))) args types)])
+                            (let ([typed-args (map (lambda (a t) (string-append (symbol->string a) ": " (unparse-tipo t))) args types)])
                               (string-append (unparse-tipo rt) " " (symbol->string id) "(" (string-join typed-args ", ") ") = " (unparse-expresion b))))
                           ret-types ids arg-id-lists arg-type-lists bodies)])
           (string-append "letrec " (string-join funcs " ") " in " (unparse-expresion body) " end")))

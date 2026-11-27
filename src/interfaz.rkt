@@ -30,7 +30,13 @@
         (chequear-programa pgm)
         (cases programa pgm
           (un-programa (decls cuerpo)
+
             (registrar-declaraciones! decls)
+            (value-of cuerpo (ambiente-vacio))))))))
+
+(define correr
+  (lambda (texto) (valor->texto (interpretar texto))))
+
             (value-of cuerpo (ambiente-vacio))))))))
 
 (define correr

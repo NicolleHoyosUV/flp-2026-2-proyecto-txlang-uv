@@ -117,6 +117,10 @@
        (eopl:error 'value-of "Construcción no implementada aún: ~s" exp))
       )))
 
+      ;; Pendiente para entrega 2 (transacciones y registros)
+      (else
+       (eopl:error 'value-of "Construcción no implementada aún: ~s" exp)))))
+
   
 ;; Función auxiliar para aplicar clausuras
 (define apply-procedure
@@ -143,7 +147,7 @@
               (if val-test
                   (value-of (car thens) env)
                   (eval-elifs (cdr tests) (cdr thens) else-exp env)))))))
-
+                  
 ;; Función auxiliar para verificar que no haya campos repetidos
 (define validar-campos-duplicados!
   (lambda (nombre-reg ids contexto)

@@ -15,14 +15,14 @@
     ;; Comentario de bloque (#| ... |#) que no admite '|' adentro según la especificación
     (comment ("#|" (arbno (not #\|)) "|#") skip)
     
-    ;; Identificadores y palabras reservadas
-    (identificador (letter (arbno (or letter digit "_" "-"))) symbol)
-    
+        ;; Identificadores y palabras reservadas
+    (identificador (letter (arbno (or letter digit "_" "?"))) symbol)
+
     ;; Literales
-    (numero (digits) number)
-    (numero ("-" digits) number)
-    (flotante (digits "." digits) number)
-    (flotante ("-" digits "." digits) number)
+    (numero (digit (arbno digit)) number)
+    (numero ("-" digit (arbno digit)) number)
+    (flotante (digit (arbno digit) "." digit (arbno digit)) number)
+    (flotante ("-" digit (arbno digit) "." digit (arbno digit)) number)
     (cadena ("\"" (arbno (not #\")) "\"") string)
     (caracter ("'" (not #\') "'") symbol)
    )
